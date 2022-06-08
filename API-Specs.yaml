@@ -5,7 +5,7 @@ info:
   description: The data-pipeline-orchestrator coordinates the data model load to compute.
 
 servers:
-  - url: https://gaddale.beta.celonis.cloud
+  - url: https://gaddale.beta.celonis.cloud/data-pipeline-orchestrator
 
 security:
   - CookieAuth: []
