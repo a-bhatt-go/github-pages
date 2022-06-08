@@ -1,0 +1,355 @@
+openapi: 3.0.0
+info:
+  version: 1.0.0
+  title: Data Pipeline Orchestrator
+  description: The data-pipeline-orchestrator coordinates the data model load to compute.
+
+servers:
+  - url: https://example.io
+
+security:
+  - CookieAuth: []
+  - ApiKeyAuth: []
+
+paths:
+  /v1/api/data-pools/{dataPoolId}/data-models/{dataModelId}/load:
+    get:
+      tags:
+        - Data Model Load View
+      description: Returns the details of a Data Model Load
+      parameters:
+        - $ref: '#/components/parameters/DataPoolId'
+        - $ref: '#/components/parameters/DataModelId'
+      responses:
+        '200':
+          description: Successfully returned Data Model Load details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DataModelResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+
+    post:
+      tags:
+        - Data Model Load Actions
+      description: Starts a Data Model Load
+      parameters:
+        - $ref: '#/components/parameters/DataPoolId'
+        - $ref: '#/components/parameters/DataModelId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DataModelLoadTriggerRequest'
+      responses:
+        '200':
+          description: Successfully started a Data Model Load
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+        '409':
+          $ref: '#/components/responses/409Error'
+
+  /v1/api/data-pools/{dataPoolId}/data-models/{dataModelId}/load/tables:
+    get:
+      tags:
+        - Data Model Load View
+      description: Returns the details of the Data Model Load tables
+      parameters:
+        - $ref: '#/components/parameters/DataPoolId'
+        - $ref: '#/components/parameters/DataModelId'
+      responses:
+        '200':
+          description: Successfully returned Data Model load table details
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DataModelTableResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+
+  /v1/api/data-pools/{dataPoolId}/data-models/{dataModelId}/load/cancel:
+    post:
+      tags:
+        - Data Model Load Actions
+      description: Cancels a running Data Model Load
+      parameters:
+        - $ref: '#/components/parameters/DataPoolId'
+        - $ref: '#/components/parameters/DataModelId'
+      responses:
+        '200':
+          description: Successfully cancelled the Data Model Load
+        '404':
+          $ref: '#/components/responses/404Error'
+
+  /v1/api/data-pools/{dataPoolId}/data-models:
+    get:
+      tags:
+        - Data Model Load View
+      description: Returns the Data Models of a Data Pool
+      parameters:
+        - $ref: '#/components/parameters/DataPoolId'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Successfully returned the Data Models
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DataModelResponse'
+        '400':
+          $ref: '#/components/responses/400Error'
+        '401':
+          $ref: '#/components/responses/401Error'
+        '403':
+          $ref: '#/components/responses/403Error'
+        '404':
+          $ref: '#/components/responses/404Error'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      description:
+      in: header
+      name: Authorization
+    CookieAuth:
+      type: apiKey
+      description:
+      in: cookie
+      # example: two-factor-client-id=f9f6b593-8ddf-4125-a8cd-a7ca4f565c15; XSRF-TOKEN=d8a1eb16-6772-445e-9f27-0d66427357f7; celonis-user-token=rUKMSEkTRVkGZEDXlgUM
+      name: Cookie
+  schemas:
+    DataModelLoadStage:
+      type: string
+      description: The stage of a Data Model Load
+      enum:
+        - LOADED
+        - LOADING
+        - LOAD_QUEUED
+        - EXPORTED
+        - EXPORTING
+        - EXPORTED_QUEUED
+        - CREATED
+        - CREATING
+    DataModelLoadStatus:
+      type: string
+      description: The status of a Data Model Load
+      enum:
+        - SUCCESS
+        - FAILED
+        - CANCELED
+    DataModelResponse:
+      type: object
+      description:
+      properties:
+        dataModelLoadId:
+          type: string
+          description:
+        dataModelId:
+          type: string
+          description:
+        name:
+          type: string
+          description:
+        stage:
+          $ref: '#/components/schemas/DataModelLoadStage'
+        startDate:
+          type: integer
+          format: int64
+          description: "Timestamp in milli seconds when the data model load was started"
+        averageRunTime:
+          type: integer
+          format: int64
+          description:
+        status:
+          $ref: '#/components/schemas/DataModelLoadStatus'
+      example:
+        dataModelLoadId: "86371e16-b34f-4ede-b972-615d41a2aa10"
+        dataModelId: "051a9ea7-be77-4a0f-89bb-f390c28b1f3c"
+        name: "my-data-model"
+        stage: LOADING
+        startDate: 1623859029189
+        averageRunTime: 9899
+        status: SUCCESS
+
+    DataModelTableResponse:
+      type: object
+      description:
+      properties:
+        dataModelLoadId:
+          type: string
+          description:
+        name:
+          type: string
+          description:
+        stage:
+          $ref: '#/components/schemas/DataModelLoadStage'
+        status:
+          $ref: '#/components/schemas/DataModelLoadStatus'
+        rowCount:
+          type: integer
+          format: int64
+          description:
+      example:
+        dataModelLoadId: "86371e16-b34f-4ede-b972-615d41a2aa10"
+        name: "my-data-model"
+        stage: LOADING
+        status: SUCCESS
+        rowCount: 878
+
+    DataModelLoadTriggerRequest:
+      type: object
+      nullable: false
+      description:
+      properties:
+        tableIds:
+          type: string
+          description:
+      example:
+        tableIds: ["table-id-1", "table-id-2"]
+    Error:
+      type: object
+      description:
+      properties:
+        title:
+          type: string
+          description:
+        description:
+          type: string
+          description:
+        status:
+          type: integer
+          description: HTTP status code
+        properties:
+          type: object
+          description:
+          additionalProperties:
+            type: string
+  examples:
+    400Example:
+      value:
+        title: "Error title"
+        description: "Brief description of the error"
+        status: 400
+        properties:
+          "key": "value"
+    401Example:
+      value:
+        title: "Error title"
+        description: "Brief description of the error"
+        status: 401
+        properties:
+          "key": "value"
+    403Example:
+      value:
+        title: "Error title"
+        description: "Brief description of the error"
+        status: 403
+        properties:
+          "key": "value"
+    404Example:
+      value:
+        title: "Error title"
+        description: "Brief description of the error"
+        status: 404
+        properties:
+          "key": "value"
+    409Example:
+      value:
+        title: "Error title"
+        description: "Brief description of the error"
+        status: 409
+        properties:
+          "key": "value"
+  parameters:
+    DataPoolId:
+      name: dataPoolId
+      in: path
+      required: true
+      description: Unique ID of the Data Pool
+      schema:
+        type: string
+    DataModelId:
+      name: dataModelId
+      in: path
+      required: true
+      description: Unique ID of the Data Model
+      schema:
+        type: string
+    Limit:
+      name: limit
+      in: query
+      required: true
+      description: Limits the number of Data Models to be fetched
+      schema:
+        type: integer
+  responses:
+    400Error:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            ErrorExample:
+              $ref: '#/components/examples/400Example'
+    401Error:
+      description: Unauthenticated request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            ErrorExample:
+              $ref: '#/components/examples/401Example'
+    403Error:
+      description: Unauthorised request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            ErrorExample:
+              $ref: '#/components/examples/403Example'
+    404Error:
+      description: Entity not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            ErrorExample:
+              $ref: '#/components/examples/404Example'
+    409Error:
+      description: Conflicting request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            ErrorExample:
+              $ref: '#/components/examples/409Example'
